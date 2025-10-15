@@ -3,11 +3,12 @@ const cors = require('cors');
 const { query } = require('./db'); // Importation de la connexion à la DB
 
 const app = express();
-const PORT = 3000; // Le port que vous utiliserez dans React Native (ex: http://192.168.1.10:3000)
-
-// Middlewares
 // 1. CORS: Autorise l'accès depuis d'autres origines (votre app mobile)
 app.use(cors());
+const PORT = '3000'; // Le port que vous utiliserez dans React Native (ex: http://192.168.1.10:3000)
+
+// Middlewares
+
 // 2. Body Parser: Permet à Express de lire le JSON envoyé dans le corps des requêtes POST
 app.use(express.json());
 
@@ -31,7 +32,7 @@ app.post('/api/clients', async (req, res) => {
 
   try {
     const text = `
-      INSERT INTO clients (numero_de_telephone, code_secret, prenom) 
+      INSERT INTO customers (phone_number, secret_code_hash, first_name) 
       VALUES ($1, $2, $3) 
       RETURNING *
     `;
