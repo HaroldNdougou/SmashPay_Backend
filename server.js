@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { query } = require('./db'); // Importation de la connexion à la DB
+const sanitizeHtml = require('sanitize-html');
 
 const app = express();
 // 1. CORS: Autorise l'accès depuis d'autres origines (votre app mobile)
@@ -23,11 +24,42 @@ app.post('/api/clients', async (req, res) => {
   if (!numero_de_telephone || !code_secret || !prenom) {
     return res.status(400).json({ error: 'Tous les champs sont requis.' });
   }
+
+  if (numero_de_telephone.length !== 9 || !/^\d{9}$/.test(numero_de_telephone)) {
+    return res.status(400).json({ error: 'Numéro de téléphone incorrect.' });
+  }
+
+  if (code_secret.length !== 4 || !/^\d{4}$/.test(code_secret)) {
+    return res.status(400).json({ error: 'Code secret incorrect.' });
+  }
+
+  // 1. Vérification du type (doit être une chaîne) et de la présence
+  if (typeof prenom !== 'string') {
+      return res.status(400).json({ error: 'Prénom erroné' });
+  }
+  // 2. Vérification stricte de la longueur
+  if (prenom.length > 20) {
+      return res.status(400).json({ error: 'Le prénom est trop long.' });
+  }
+
+  // 3. NETTOYAGE : Suppression de tout code HTML/JS
+    const safePrenom = sanitizeHtml(prenom, {
+        allowedTags: [], // N'autoriser AUCUNE balise HTML
+        allowedAttributes: {}, // N'autoriser AUCUN attribut
+        // Optionnel : Tronquer les espaces inutiles
+    }).trim();
+    const safeNumeroTelephone = sanitizeHtml(numero_de_telephone, {
+        allowedTags: [], // N'autoriser AUCUNE balise HTML
+        allowedAttributes: {}, // N'autoriser AUCUN attribut
+        // Optionnel : Tronquer les espaces inutiles
+    }).trim();
+    const safeCodeSecret = sanitizeHtml(code_secret, {
+        allowedTags: [], // N'autoriser AUCUNE balise HTML
+        allowedAttributes: {}, // N'autoriser AUCUN attribut
+        // Optionnel : Tronquer les espaces inutiles
+    }).trim();
   
-  // NOTE IMPORTANTE DE SÉCURITÉ :
-  // Le code_secret doit être HACHÉ ici avant d'être inséré en DB.
-  // Pour la simplicité de l'exemple, nous l'insérons tel quel,
-  // mais utilisez toujours une librairie comme 'bcrypt' en production!
+  
   const secretHash = code_secret; // Remplacer par bcrypt.hash(code_secret, 10)
 
   try {
@@ -36,7 +68,7 @@ app.post('/api/clients', async (req, res) => {
       VALUES ($1, $2, $3) 
       RETURNING *
     `;
-    const values = [numero_de_telephone, secretHash, prenom];
+    const values = [safeNumeroTelephone, safeCodeSecret, safePrenom];
     
     // Exécution de la requête d'insertion dans PostgreSQL
     const result = await query(text, values);
