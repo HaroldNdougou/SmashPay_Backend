@@ -1,3 +1,4 @@
+require('dotenv').config(); 
 const express = require('express');
 const cors = require('cors');
 const { query } = require('./db'); // Importation de la connexion à la DB
@@ -6,7 +7,10 @@ const sanitizeHtml = require('sanitize-html');
 const app = express();
 // 1. CORS: Autorise l'accès depuis d'autres origines (votre app mobile)
 app.use(cors());
-const PORT = '3000'; // Le port que vous utiliserez dans React Native (ex: http://192.168.1.10:3000)
+
+// 🔑 Utiliser la variable d'environnement pour le PORT
+// On utilise une valeur par défaut si elle n'est pas trouvée
+const PORT = process.env.PORT || 3000; 
 
 // Middlewares
 
